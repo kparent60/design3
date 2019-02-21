@@ -12,7 +12,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('', 15555))
 img_counter = 0
 s.listen(1)
-ser = serial.Serial('/dev/ttyACM0', 9600)
+ser = serial.Serial('/dev/ttyACM0', 1000000)
 client, address = s.accept()
 print("Connecte au client")
 
@@ -26,13 +26,8 @@ while True:
 	if coor == 'sendPosition':
 		position = client.recv(255)
 		print('Recu:{}'.format(position))
-		data = bytearray(position[0],'utf-8')
-		data2 = bytearray(position[1],'utf-8')
+		data = bytearray(position,'utf-8')
 		ser.write(data)
-		ser.write(data2)
-		#ser.write(position.encode())
-		print(ser.read())
-		print(ser.read())
 		ser.flush()
         elif coor == 'getImage':
                 cam = cv2.VideoCapture(0)
