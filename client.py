@@ -13,26 +13,10 @@ port = 15555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def main():
-	connectToPi()
-	time.sleep(2)
-	readySignal()
-	time.sleep(2)
-	getImage()
-	time.sleep(2)
-	sendCoordinates("2")
-	time.sleep(2)
-	deconnectToPi()
-
 def connectToPi():         
 	print(host)
 	s.connect((host, port))
 	print("Connecte au serveur")
-
-def readySignal():
-	sig = "Go"
-	s.send(sig.encode('utf-8'))
-	print("Depart envoye")
 
 def getImage():
 	data = b""
@@ -70,8 +54,7 @@ def sendCoordinates(str):
 	print("Coordonnees envoyees")
 
 def deconnectToPi():
-	s.close()
-
-if __name__ == "__main__":
-    # execute only if run as a script
-    main()
+	signal = 'deconnect'
+	s.sendall(signal.encode('utf-8'))
+	print("Deconnected")
+	#s.close()
