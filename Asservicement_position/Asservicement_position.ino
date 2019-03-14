@@ -118,28 +118,28 @@ double position_moteur4 = 0;
 /**********************/
  
 double Consigne_vitesse = 40;
-//String consigne = "";
-//String consigne1 = "";
-//String consigne2 = "";
-//String consigne3 = "";
-//String consigne4 = "";
+double Consigne_rotation = 20;
+
 int consigne = 0;
 int consigne1 = 0;
 int consigne2 = 0;
 int consigne3 = 0;
 int consigne4 = 0;
+int consigne_angle = 0;
+double consigne_Angle = 0;
+double Angle = 0;
+double Angle_precedant = 0;
+double vitesse_moteur = 0;
 double Vmax = 6;
 // Cadence d'envoi des donnÃ©es en ms
 #define TSDATA 100
 double tempsDernierEnvoi = 0;
 double tempsCourant = 0;
 
-//int incomingByteMSB = 0;
-//int incomingByteLSB = 0;
-//int incomingByte = 0;
-
+#define Pin_pi_connect 52
 int integerValue_X = 0;
 int integerValue_Y = 0; 
+int integerValue_Angle = 0;
 bool negativeNumber=false; // track if number is negative
 char incomingByte;
 
@@ -180,6 +180,12 @@ void setup(void) {
   pinMode(commandePin2_moteur4, OUTPUT);
   pinMode(commandePWM_moteur4, OUTPUT);
 
+
+  //com pi
+  pinMode(Pin_pi_connect, OUTPUT);
+  digitalWrite(Pin_pi_connect, HIGH);
+
+  
   // Liaison sÃ©rie
   Serial.begin(1000000);
   Serial.setTimeout(5);
@@ -199,18 +205,12 @@ void loop() {
 }
 
 void lire_consigne(void){
-//    if (Serial.available() > 0) {
-//        consigne = Serial.readString();
-//        consigne1 = consigne;
-//        consigne2 = consigne;
-//        consigne3 = consigne;
-//        consigne4 = consigne;
-//  if (Serial.available() > 0) {
 
 
 if (Serial.available() > 0) {   // something came across serial
             integerValue_X = 0;         // throw away previous integerValue
-            integerValue_Y = 0; 
+            integerValue_Y = 0;
+            integerValue_Angle = 0; 
             negativeNumber = false;  // reset for negative
             while(1) {            // force into a loop until 'n' is received
               incomingByte = Serial.read();
@@ -230,7 +230,7 @@ if (Serial.available() > 0) {   // something came across serial
         negativeNumber = false;
           while(1) {            // force into a loop until 'n' is received
             incomingByte = Serial.read();
-            if (incomingByte == '\n') break;   // exit the while(1), we're done receiving
+            if (incomingByte == ',') break;   // exit the while(1), we're done receiving
             if (incomingByte == -1) continue;  // if no characters are in the buffer read() returns -1
             if (incomingByte == '-') {
               negativeNumber=true;
@@ -243,61 +243,100 @@ if (Serial.available() > 0) {   // something came across serial
     if (negativeNumber){
       integerValue_Y = -integerValue_Y;
     }
+    negativeNumber = false;
+          while(1) {            // force into a loop until 'n' is received
+            incomingByte = Serial.read();
+            if (incomingByte == '\n') break;   // exit the while(1), we're done receiving
+            if (incomingByte == -1) continue;  // if no characters are in the buffer read() returns -1
+            if (incomingByte == '-') {
+              negativeNumber=true;
+              continue;
+          }
+            integerValue_Angle *= 10;  // shift left 1 decimal place
+            // convert ASCII to integer, add, and shift left 1 decimal place
+            integerValue_Angle = ((incomingByte - 48) + integerValue_Angle);
+          }
+    if (negativeNumber){
+      integerValue_Angle = -integerValue_Angle;
+    }
     consigne1 = integerValue_X;
     consigne4 = integerValue_X;
     consigne2 = integerValue_Y;
     consigne3 = integerValue_Y;
+    consigne_angle = integerValue_Angle; 
   }
 
     consigne_position_moteur1 = consigne1;
     consigne_position_moteur4 = consigne4;
     consigne_position_moteur2 = consigne2;
     consigne_position_moteur3 = consigne3;
-    //Consigne_vitesse = consigne.toInt();
-   
-    
-     
-    if (consigne_position_moteur1 < 0){
-      Setpoint_moteur1 = -Consigne_vitesse*255/100;
-    }
-    if (consigne_position_moteur1 > 0){
-      Setpoint_moteur1 = Consigne_vitesse*255/100;
-    }
-    if (consigne_position_moteur1 == 0){
-      Setpoint_moteur1 = 0;
-    }
+    consigne_Angle = consigne_angle;
 
-    if (consigne_position_moteur2 < 0){
-      Setpoint_moteur2 = -Consigne_vitesse*255/100;
-    }
-    if (consigne_position_moteur2 > 0){
-      Setpoint_moteur2 = Consigne_vitesse*255/100;
-    }
-    if (consigne_position_moteur2 == 0){
-      Setpoint_moteur2 = 0;
-    }
-
-    if (consigne_position_moteur3 < 0){
-      Setpoint_moteur3 = -Consigne_vitesse*255/100;
-    }
-    if (consigne_position_moteur3 > 0){
-      Setpoint_moteur3 = Consigne_vitesse*255/100;
-    }
-    if (consigne_position_moteur3 == 0){
-      Setpoint_moteur3 = 0;
+    if (consigne_Angle == 0){
+      
+      if (consigne_position_moteur1 < 0){
+        Setpoint_moteur1 = -Consigne_vitesse*255/100;
+      }
+      if (consigne_position_moteur1 > 0){
+        Setpoint_moteur1 = Consigne_vitesse*255/100;
+      }
+      if (consigne_position_moteur1 == 0){
+        Setpoint_moteur1 = 0;
+      }
+  
+      if (consigne_position_moteur2 < 0){
+        Setpoint_moteur2 = -Consigne_vitesse*255/100;
+      }
+      if (consigne_position_moteur2 > 0){
+        Setpoint_moteur2 = Consigne_vitesse*255/100;
+      }
+      if (consigne_position_moteur2 == 0){
+        Setpoint_moteur2 = 0;
+      }
+  
+      if (consigne_position_moteur3 < 0){
+        Setpoint_moteur3 = -Consigne_vitesse*255/100;
+      }
+      if (consigne_position_moteur3 > 0){
+        Setpoint_moteur3 = Consigne_vitesse*255/100;
+      }
+      if (consigne_position_moteur3 == 0){
+        Setpoint_moteur3 = 0;
+      } 
+  
+      if (consigne_position_moteur4 < 0){
+        Setpoint_moteur4 = -Consigne_vitesse*255/100;
+      }
+      if (consigne_position_moteur4 > 0){
+        Setpoint_moteur4 = Consigne_vitesse*255/100;
+      }
+      if (consigne_position_moteur4 == 0){
+        Setpoint_moteur4 = 0;
+      }
     } 
 
-    if (consigne_position_moteur4 < 0){
-      Setpoint_moteur4 = -Consigne_vitesse*255/100;
+    if (consigne_Angle  > 0){
+      Setpoint_moteur1 = Consigne_rotation*255/100;
+      Setpoint_moteur2 = Consigne_rotation*255/100;
+      Setpoint_moteur3 = -Consigne_rotation*255/100;
+      Setpoint_moteur4 = -Consigne_rotation*255/100;
     }
-    if (consigne_position_moteur4 > 0){
-      Setpoint_moteur4 = Consigne_vitesse*255/100;
+    
+    if (consigne_Angle  < 0){
+      Setpoint_moteur1 = -Consigne_rotation*255/100;
+      Setpoint_moteur2 = -Consigne_rotation*255/100;
+      Setpoint_moteur3 = Consigne_rotation*255/100;
+      Setpoint_moteur4 = Consigne_rotation*255/100;
+    }   
+
+    if (consigne_Angle == 0 && consigne_position_moteur1 == 0 && consigne_position_moteur2 == 0 && consigne_position_moteur3 == 0 && consigne_position_moteur4 == 0){
+      Pin_pi_connect = HIGH;
     }
-    if (consigne_position_moteur4 == 0){
-      Setpoint_moteur4 = 0;
-    } 
+    if (consigne_Angle =! 0 || consigne_position_moteur1 =! 0 || consigne_position_moteur2 =! 0 || consigne_position_moteur3 =! 0 || consigne_position_moteur4 =! 0){
+       Pin_pi_connect = LOW;
+    }
     
-    
+      
 }
 
  
@@ -317,61 +356,85 @@ void isrt(){
   ticksCodeur_moteur3 = ticksCodeur_moteur3-codeurDeltaPos_moteur3;
   codeurDeltaPos_moteur4 = ticksCodeur_moteur4;
   ticksCodeur_moteur4 = ticksCodeur_moteur4-codeurDeltaPos_moteur4;
+
   
   // Calcul de la vitesse de rotation
   temps_1 = micros();
-  omega_moteur1 = ((float)((2.*3.141592/6400*((float)codeurDeltaPos_moteur1)))/(temps_1-tempsD_1)*1000000);  // en rad/s
-  position_moteur1 = position_moteur1 + omega_moteur1*(2*3.141592)*32/31.75;
+  omega_moteur1 = ((float)((2.*3.141592/6533*((float)codeurDeltaPos_moteur1)))/(temps_1-tempsD_1)*1000000);  // en rad/s
   Input_moteur1 = omega_moteur1*255/Vmax;
-  tempsD_1 = temps_1;
-
-  if  ( abs(consigne_position_moteur1) <= abs(position_moteur1+ omega_moteur1*(2*3.141592)*32/31.75*2 )){
-    Setpoint_moteur1 = 0;
-    consigne_position_moteur1 = 0;
-    position_moteur1 = 0;
-    consigne1 =0;//"";
+  tempsD_1 = temps_1; 
+    
+  
+  if (consigne_Angle ==0){
+    position_moteur1 = position_moteur1 + omega_moteur1*(2*3.141592)*32/31.75;
+    if  ( abs(consigne_position_moteur1) <= abs(position_moteur1+ omega_moteur1*(2*3.141592)*32/31.75*3 )){
+      Setpoint_moteur1 = 0;
+      consigne_position_moteur1 = 0;
+      position_moteur1 = 0;
+      consigne1 =0;
+    }
   }
   
   temps_2 = micros();
-  omega_moteur2 = ((float)((2.*3.141592/6400*((float)codeurDeltaPos_moteur2)))/(temps_2-tempsD_2)*1000000);  // en rad/s
-  position_moteur2 = position_moteur2 + omega_moteur2*(2*3.141592)*32/31.76;
+  omega_moteur2 = ((float)((2.*3.141592/6533*((float)codeurDeltaPos_moteur2)))/(temps_2-tempsD_2)*1000000);  // en rad/s
   Input_moteur2 = omega_moteur2*255/Vmax;
   tempsD_2 = temps_2;
   
-  if  ( abs(consigne_position_moteur2) <= abs(position_moteur2+ omega_moteur2*(2*3.141592)*32/31.76*2 )){
-    Setpoint_moteur2 = 0;
-    consigne_position_moteur2 = 0;
-    position_moteur2 = 0;
-    consigne2 =0;//"";
+  
+  if (consigne_Angle ==0){  
+    position_moteur2 = position_moteur2 + omega_moteur2*(2*3.141592)*32/31.76;
+    if  ( abs(consigne_position_moteur2) <= abs(position_moteur2+ omega_moteur2*(2*3.141592)*32/31.76*3 )){
+      Setpoint_moteur2 = 0;
+      consigne_position_moteur2 = 0;
+      position_moteur2 = 0;
+      consigne2 =0;
+    }
   }
-
   
   temps_3 = micros();
-  omega_moteur3 = ((float)((2.*3.141592/6400*((float)codeurDeltaPos_moteur3)))/(temps_3-tempsD_3)*1000000);  // en rad/s
-  position_moteur3 = position_moteur3 + omega_moteur3*(2*3.141592)*32/30.84;
+  omega_moteur3 = ((float)((2.*3.141592/6533*((float)codeurDeltaPos_moteur3)))/(temps_3-tempsD_3)*1000000);  // en rad/s
   Input_moteur3 = omega_moteur3*255/Vmax;
   tempsD_3 = temps_3;
-  
-  if  ( abs(consigne_position_moteur3) <= abs(position_moteur3+ omega_moteur3*(2*3.141592)*32/30.84*2 )){
-    Setpoint_moteur3 = 0;
-    consigne_position_moteur3 = 0;
-    position_moteur3 = 0;
-    consigne3 =0;//"";
+
+  if (consigne_Angle ==0){ 
+    position_moteur3 = position_moteur3 + omega_moteur3*(2*3.141592)*32/30.84;
+    if  ( abs(consigne_position_moteur3) <= abs(position_moteur3+ omega_moteur3*(2*3.141592)*32/30.84*3 )){
+      Setpoint_moteur3 = 0;
+      consigne_position_moteur3 = 0;
+      position_moteur3 = 0;
+      consigne3 =0;
+    }
   }
 
   
   temps_4 = micros();
-  omega_moteur4 = ((float)((2.*3.141592/6400*((float)codeurDeltaPos_moteur4)))/(temps_4-tempsD_4)*1000000);  // en rad/s
-  position_moteur4 = position_moteur4 + omega_moteur4*(2*3.141592)*32/31.6;
+  omega_moteur4 = ((float)((2.*3.141592/6533*((float)codeurDeltaPos_moteur4)))/(temps_4-tempsD_4)*1000000);  // en rad/s
   Input_moteur4 = omega_moteur4*255/Vmax;
   tempsD_4 = temps_4;
-  
-  if  ( abs(consigne_position_moteur4) <= abs(position_moteur4+ omega_moteur4*(2*3.141592)*32/31.6*2 )){
-    Setpoint_moteur4 = 0;
-    consigne_position_moteur4 = 0;
-    position_moteur4 = 0;
-    consigne4 =0;//"";
+
+  if (consigne_Angle ==0){
+    position_moteur4 = position_moteur4 + omega_moteur4*(2*3.141592)*32/31.6;
+    if  ( abs(consigne_position_moteur4) <= abs(position_moteur4+ omega_moteur4*(2*3.141592)*32/31.6*3 )){
+      Setpoint_moteur4 = 0;
+      consigne_position_moteur4 = 0;
+      position_moteur4 = 0;
+      consigne4 =0;
+    }
   }
+
+  if (consigne_Angle =! 0){
+    vitesse_moteur = omega_moteur1*100/Vmax;
+    Angle = Angle + 1.85;//(-3.773* vitesse_moteur + 3.974* vitesse_moteur + Angle_precedant)*1.05; 
+
+    if (abs(consigne_angle) <= abs(Angle)){
+      consigne_Angle = 0;
+      consigne_angle = 0;
+      Angle = -1.85;
+      Angle_precedant = 0;
+      }
+  }
+
+  
 }
  
 void ecritureData(void) {
@@ -382,35 +445,6 @@ void ecritureData(void) {
     isrt();
     cacul_PID();
     envoie_commande();
-    
-//    Serial.print(tempsCourant/1000);
-//    Serial.print(",");
-//    Serial.print(Setpoint_moteur1);
-//    Serial.print(",");
-//    Serial.print(Input_moteur1);
-//    Serial.print(",");
-//    Serial.print(position_moteur1);
-//    Serial.print(",");
-//    Serial.print(Setpoint_moteur2);
-//    Serial.print(",");
-//    Serial.print(Input_moteur2);
-//    Serial.print(",");
-//    Serial.print(position_moteur2);
-//    Serial.print(",");
-//    Serial.print(Setpoint_moteur3);
-//    Serial.print(",");
-//    Serial.print(Input_moteur3);
-//    Serial.print(",");
-//    Serial.print(position_moteur3);    
-//    Serial.print(",");
-//    Serial.print(Setpoint_moteur4);
-//    Serial.print(",");
-//    Serial.print(Input_moteur4);
-//    Serial.print(",");
-//    Serial.print(position_moteur4);
-//
-//    Serial.print("\n");
- 
     tempsDernierEnvoi = tempsCourant;
   }
 }
@@ -541,8 +575,8 @@ void envoie_commande()
     analogWrite(commandePWM_moteur1, abs(Output_moteur1));
   }
   if (Output_moteur1 == 0.){
-    digitalWrite(commandePin1_moteur1, LOW);
-    digitalWrite(commandePin2_moteur1, LOW);
+    digitalWrite(commandePin1_moteur1, HIGH);
+    digitalWrite(commandePin2_moteur1, HIGH);
     analogWrite(commandePWM_moteur1, 0);
   }
   /**********************/
@@ -559,8 +593,8 @@ void envoie_commande()
     analogWrite(commandePWM_moteur2, abs(Output_moteur2));
   }
   if (Output_moteur2 == 0.){
-    digitalWrite(commandePin1_moteur2, LOW);
-    digitalWrite(commandePin2_moteur2, LOW);
+    digitalWrite(commandePin1_moteur2, HIGH);
+    digitalWrite(commandePin2_moteur2, HIGH);
     analogWrite(commandePWM_moteur2, 0);
   }
   /**********************/
@@ -577,8 +611,8 @@ void envoie_commande()
     analogWrite(commandePWM_moteur3, abs(Output_moteur3));
   }
   if (Output_moteur3 == 0.){
-    digitalWrite(commandePin1_moteur3, LOW);
-    digitalWrite(commandePin2_moteur3, LOW);
+    digitalWrite(commandePin1_moteur3, HIGH);
+    digitalWrite(commandePin2_moteur3, HIGH);
     analogWrite(commandePWM_moteur3, 0);
   }
   /**********************/
@@ -595,8 +629,8 @@ void envoie_commande()
     analogWrite(commandePWM_moteur4, abs(Output_moteur4));
   }
   if (Output_moteur4 == 0.){
-    digitalWrite(commandePin1_moteur4, LOW);
-    digitalWrite(commandePin2_moteur4, LOW);
+    digitalWrite(commandePin1_moteur4, HIGH);
+    digitalWrite(commandePin2_moteur4, HIGH);
     analogWrite(commandePWM_moteur4, 0);
   }
   /**********************/
@@ -605,42 +639,39 @@ void envoie_commande()
 void GestionInterruption_moteur1()
 {
   if (digitalReadFast(encodeurPinA_moteur1) == digitalReadFast(encodeurPinB_moteur1)) {
-    ticksCodeur_moteur1--;
+    ticksCodeur_moteur1++;
   }
   else {
-    ticksCodeur_moteur1++;
+    ticksCodeur_moteur1--;
   }
 }
  
 void GestionInterruption_moteur2()
 {
   if (digitalReadFast(encodeurPinA_moteur2) == digitalReadFast(encodeurPinB_moteur2)) {
-    ticksCodeur_moteur2--;
+    ticksCodeur_moteur2++;
   }
   else {
-    ticksCodeur_moteur2++;
+    ticksCodeur_moteur2--;
   }
 }
 
 void GestionInterruption_moteur3()
 {
   if (digitalReadFast(encodeurPinA_moteur3) == digitalReadFast(encodeurPinB_moteur3)) {
-    ticksCodeur_moteur3++;
+    ticksCodeur_moteur3--;
   }
   else {
-    ticksCodeur_moteur3--;
+    ticksCodeur_moteur3++;
   }
 }
 
 void GestionInterruption_moteur4()
 {
   if (digitalReadFast(encodeurPinA_moteur4) == digitalReadFast(encodeurPinB_moteur4)) {
-    ticksCodeur_moteur4++;
-  }
-  else {
     ticksCodeur_moteur4--;
   }
+  else {
+    ticksCodeur_moteur4++;
+  }
 }
-
-
-
