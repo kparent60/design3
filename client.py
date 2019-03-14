@@ -53,6 +53,16 @@ def sendCoordinates(str):
 	s.sendall(str.encode('utf-8'))
 	print("Coordonnees envoyees")
 
+# A appeler directement apres sendCoordinates!!
+def robotReady():
+	okSignal = s.recv(255)
+	print(okSignal)
+
+def changeCondensateur()
+	signal = 'condensateurChange'
+	s.sendall(signal.encode('utf-8'))
+	print("Signal envoye!")
+
 def deconnectToPi():
 	signal = 'deconnect'
 	s.sendall(signal.encode('utf-8'))

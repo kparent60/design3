@@ -16,6 +16,8 @@ def main():
 
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(18,GPIO.OUT)
+	GPIO.setup(21,GPIO.IN)
+	GPIO.setup(20,GPIO.OUT)
 	
 	try:
 		cam = cv2.VideoCapture(0)
@@ -34,15 +36,21 @@ def main():
 	client, address = s.accept()
 	print("Connecte au client")
 	GPIO.output(18,GPIO.LOW)
+	GPIO.output(20,GPIO.LOW)
 
 	while True:
-	
+		GPIO.output(21,GPIO.LOW)
 		coor = client.recv(255)
 		if coor == 'sendPosition':
 			position = client.recv(255)
 			data = bytearray(position,'utf-8')
 			ser.write(data)
 			ser.flush()
+			state = GPIO.input(21)
+			while(state != 1)
+				state = GPIO.input(21)
+			print("Pin est égale à 1!")
+			client.sendall(data2.encode('utf-8'))
 
         	elif coor == 'getImage':
                 	ret, frame = cam.read()
@@ -56,6 +64,10 @@ def main():
 		elif coor == 'deconnect':
 			#GPIO.output(18,GPIO.LOW)
 			break;
+		
+		elif coor == 'condensateurChange':
+			GPIO.output(20,GPIO.HIGH)
+
 	client.close()
 	s.close()
 	time.sleep(2)
