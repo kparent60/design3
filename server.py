@@ -6,6 +6,7 @@ import struct
 import time
 import serial
 import RPi.GPIO as GPIO
+from lib import servo
 
 def main():
 
@@ -18,7 +19,10 @@ def main():
 	GPIO.setup(18,GPIO.OUT)
 	GPIO.setup(21,GPIO.IN)
 	GPIO.setup(20,GPIO.OUT)
-	
+
+	servo_hori = servo(2000, 8000, 0.0001, 5)
+	servo_vert = servo(2000, 8000, 0.0001, 5)
+
 	try:
 		cam = cv2.VideoCapture(0)
                 cam.set(3, 320);
@@ -41,6 +45,15 @@ def main():
 	while True:
 		GPIO.output(21,GPIO.LOW)
 		coor = client.recv(255)
+
+		if coor == 'servoHori':
+			position = client.recv(255)
+			data = bytearray(position,'utf-8')
+			servo_hori.run(data)
+		if coor == 'servoVert':
+			position = client.recv(255)
+			data = bytearray(position,'utf-8')
+			servo_vert.run(data)
 		if coor == 'sendPosition':
 			position = client.recv(255)
 			data = bytearray(position,'utf-8')
@@ -49,7 +62,7 @@ def main():
 			state = GPIO.input(21)
 			while(state != 1)
 				state = GPIO.input(21)
-			print("Pin est égale à 1!")
+			print("Pin est ï¿½gale ï¿½ 1!")
 			client.sendall(data2.encode('utf-8'))
 
         	elif coor == 'getImage':

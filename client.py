@@ -53,12 +53,24 @@ def sendCoordinates(str):
 	s.sendall(str.encode('utf-8'))
 	print("Coordonnees envoyees")
 
+def changeServoHori(str):
+	signal = 'servoHori'
+	s.sendall(signal.encode('utf-8'))
+	s.sendall(str.encode('utf-8'))
+	print("Servo Horizontal envoyees")
+
+def changeServoVert(str):
+	signal = 'servoVert'
+	s.sendall(signal.encode('utf-8'))
+	s.sendall(str.encode('utf-8'))
+	print("Servo Vertical envoyees")
+
 # A appeler directement apres sendCoordinates!!
 def robotReady():
 	okSignal = s.recv(255)
 	print(okSignal)
 
-def changeCondensateur()
+def changeCondensateur():
 	signal = 'condensateurChange'
 	s.sendall(signal.encode('utf-8'))
 	print("Signal envoye!")
