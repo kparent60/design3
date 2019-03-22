@@ -42,7 +42,7 @@ def getImage():
 	frame_data = data[:msg_size]
 	data = data[msg_size:]
 
-	frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
+	frame= pickle.loads(frame_data, fix_imports=True, encoding="bytes")
 	frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
 
 	cv2.imwrite('messigray.png',frame)
@@ -53,8 +53,36 @@ def sendCoordinates(str):
 	s.sendall(str.encode('utf-8'))
 	print("Coordonnees envoyees")
 
+def changeServoHori(str):
+	signal = 'servoHori'
+	s.sendall(signal.encode('utf-8'))
+	s.sendall(str.encode('utf-8'))
+	print("Servo Horizontal envoyees")
+
+def changeServoVert(str):
+	signal = 'servoVert'
+	s.sendall(signal.encode('utf-8'))
+	s.sendall(str.encode('utf-8'))
+	print("Servo Vertical envoyees")
+
+# A appeler directement apres sendCoordinates!!
+def robotReady():
+	okSignal = s.recv(255)
+	print(okSignal)
+
+def changeCondensateur():
+	signal = 'condensateurChange'
+	s.sendall(signal.encode('utf-8'))
+	print("Signal envoye!")
+
 def deconnectToPi():
 	signal = 'deconnect'
 	s.sendall(signal.encode('utf-8'))
 	print("Deconnected")
 	#s.close()
+
+def getTension():
+	signal = 'gettension'
+	s.sendall(signal.encode('utf-8'))
+	tension = s.recv(255)
+	print(tension)
