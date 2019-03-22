@@ -10,6 +10,7 @@ class servo:
         self.command = "./UscCmd --servo "
 
     def run(self, degre):
-        command_to_exe = self.command + str(self.pololu) + "," + str(self.degre*self.trans)
-        process = subprocess.Popen(command_to_exe.split(), stdout=subprocess.PIPE, cwd='/homer/pi/Documents/pololu-usb-sdk/Maestro/UscCmd')
+        command_to_exe = self.command + str(self.pololu) + "," + str(degre)
+        print(command_to_exe)
+        process = subprocess.Popen(command_to_exe.split(), stdout=subprocess.PIPE, cwd='/home/pi/Documents/pololu-usb-sdk/Maestro/UscCmd')
         output, error = process.communicate()

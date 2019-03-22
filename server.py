@@ -8,15 +8,17 @@ import serial
 import RPi.GPIO as GPIO
 import base64
 import commCondensateur as cond
-from lib import servo
+from servo import servo
+import traceback
 
 def main():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind(('', 15555))
 	s.listen(1)
 
-	servo_hori = servo(2000, 8000, 0.1, 4)
-	servo_vert = servo(2000, 8000, 0.1, 5)
+	servo_hori = servo(2000, 8000, 0.1, 0)
+	servo_vert = servo(2000, 8000, 0.1, 1)
+	servo_pre  = servo(2000, 8000, 0.1, 2)
 
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(18,GPIO.OUT)
@@ -41,7 +43,7 @@ def main():
 		print("Connecte au client")
 		GPIO.output(18,GPIO.LOW)
 		GPIO.output(20,GPIO.LOW)
-		loop(encode_param, s, client, ser)
+		loop(encode_param, s, client, ser, servo_hori, servo_vert)
 		client.close()
 		#s.close()
 		time.sleep(2)
@@ -50,7 +52,7 @@ def main():
 		print("reboot")
 	#main()
 
-def loop(encode_param, s, client, ser):
+def loop(encode_param, s, client, ser, servo_hori, servo_vert):
 	while True:
 		coor = client.recv(255)
 		if coor == 'sendPosition':
@@ -109,4 +111,5 @@ if __name__ == "__main__":
 	except Exception:
 		#s.close()
 		print("Exception occured")
-		GPIO.output(18,GPIO.LOW)
+		traceback.print_exc()
+
