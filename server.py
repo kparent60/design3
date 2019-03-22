@@ -8,11 +8,16 @@ import serial
 import RPi.GPIO as GPIO
 import base64
 import commCondensateur as cond
+from lib import servo
 
 def main():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind(('', 15555))
 	s.listen(1)
+
+	servo_hori = servo(2000, 8000, 0.1, 4)
+	servo_vert = servo(2000, 8000, 0.1, 5)
+
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(18,GPIO.OUT)
 	GPIO.setup(21,GPIO.IN)
@@ -90,6 +95,14 @@ def loop(encode_param, s, client, ser):
 		
 		elif coor == 'gettension':
 			cond.sendTension(client, ser)
+		elif coor == 'servoHori':
+			position = client.recv(255)
+			data = bytearray(position,'utf-8')
+			servo_hori.run(data)
+		elif coor == 'servoVert':
+			position = client.recv(255)
+			data = bytearray(position,'utf-8')
+			servo_vert.run(data)
 if __name__ == "__main__":
 	try:
 		main()
