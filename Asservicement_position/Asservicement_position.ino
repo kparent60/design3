@@ -143,6 +143,8 @@ int integerValue_Angle = 0;
 bool negativeNumber=false; // track if number is negative
 char incomingByte;
 
+float tension_condensateur = 0;
+
 
 /*******   PI   *******/
 const double Kp = 0.84 ;
@@ -185,11 +187,14 @@ void setup(void) {
   pinMode(Pin_pi_connect, OUTPUT);
   digitalWrite(Pin_pi_connect, HIGH);
 
+  //tension condensateur
+  pinMode(A0, INPUT);
+
   
   // Liaison sÃ©rie
-  Serial.begin(1000000);
-  Serial.setTimeout(5);
-  Serial.flush();
+//  Serial.begin(1000000);
+//  Serial.setTimeout(5);
+//  Serial.flush();
  
  
 }
@@ -199,9 +204,7 @@ void loop() {
 
   lire_consigne();
   ecritureData();
-
-
-
+  
 }
 
 void lire_consigne(void){
@@ -330,10 +333,10 @@ if (Serial.available() > 0) {   // something came across serial
     }   
 
     if (consigne_Angle == 0 && consigne_position_moteur1 == 0 && consigne_position_moteur2 == 0 && consigne_position_moteur3 == 0 && consigne_position_moteur4 == 0){
-      Pin_pi_connect = HIGH;
+      digitalWrite(Pin_pi_connect, HIGH);
     }
-    if (consigne_Angle =! 0 || consigne_position_moteur1 =! 0 || consigne_position_moteur2 =! 0 || consigne_position_moteur3 =! 0 || consigne_position_moteur4 =! 0){
-       Pin_pi_connect = LOW;
+    if (consigne_Angle != 0 || consigne_position_moteur1 != 0 || consigne_position_moteur2 != 0 || consigne_position_moteur3 != 0 || consigne_position_moteur4 != 0){
+       digitalWrite(Pin_pi_connect, LOW);
     }
     
       
@@ -444,7 +447,11 @@ void ecritureData(void) {
   if (tempsCourant-tempsDernierEnvoi > TSDATA) {
     isrt();
     cacul_PID();
-    envoie_commande();
+    envoie_commande();    
+    tension_condensateur = analogRead(A0);
+    tension_condensateur = tension_condensateur/1023*5;
+    if (tension_condensateur < 0.7){tension_condensateur = 0;}
+    Serial.println(tension_condensateur);
     tempsDernierEnvoi = tempsCourant;
   }
 }
