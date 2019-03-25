@@ -52,7 +52,7 @@ def main():
 		print("reboot")
 	#main()
 
-def loop(encode_param, s, client, ser, servo_hori, servo_vert):
+def loop(encode_param, s, client, ser, servo_hori, servo_vert, servo_pre):
 	while True:
 		coor = client.recv(255)
 		if coor == 'sendPosition':
@@ -105,6 +105,11 @@ def loop(encode_param, s, client, ser, servo_hori, servo_vert):
 			position = client.recv(255)
 			data = bytearray(position,'utf-8')
 			servo_vert.run(data)
+		elif coor == 'bras':
+			position = client.recv(255)
+			data = bytearray(position,'utf-8')
+			servo_pre.run(data)
+
 if __name__ == "__main__":
 	try:
 		main()

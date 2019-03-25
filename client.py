@@ -11,6 +11,14 @@ import struct ## new
 host = '192.168.0.38'
 port = 15555    
 
+brasup = "1000"
+brasdown = "2500"
+
+cameraup = "2000"
+cameradown = "8000"
+
+cameraneutral = "5000"
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 def connectToPi():         
@@ -64,6 +72,29 @@ def changeServoVert(str):
 	s.sendall(signal.encode('utf-8'))
 	s.sendall(str.encode('utf-8'))
 	print("Servo Vertical envoyees")
+
+def changeBras(str):
+	signal = 'bras'
+	s.sendall(signal.encode('utf-8'))
+	s.sendall(str.encode('utf-8'))
+	print("Change Bras envoyees")
+
+def brasUp():
+	changeBras(brasup)
+
+def brasDown():
+	changeBras(brasdown)
+
+def cameraUp():
+	changeServoVert(cameraup)
+
+def cameraDown():
+	changeServoVert(cameradown)
+
+def initServo():
+	changeServoVert(cameraup)
+	changeServoHori(cameraneutral)
+	changeBras(brasup)
 
 # A appeler directement apres sendCoordinates!!
 def robotReady():
