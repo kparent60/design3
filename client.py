@@ -11,13 +11,13 @@ import struct ## new
 host = '192.168.0.38'
 port = 15555    
 
-brasup = "1000"
-brasdown = "2500"
+brasup = "1900"
+brasdown = "7600"
 
-cameraup = "2000"
-cameradown = "8000"
+cameraup = "5700"
+cameradown = "2000"
 
-cameraneutral = "5000"
+cameraneutral = "5700"
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -36,7 +36,7 @@ def getImage():
 
 	while len(data) < payload_size:
 		print("Recv: {}".format(len(data)))
-		data = s.recv(4096)
+		data += s.recv(4096)
 
 	print("Done Recv: {}".format(len(data)))
 	

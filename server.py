@@ -16,8 +16,8 @@ def main():
 	s.bind(('', 15555))
 	s.listen(1)
 
-	servo_hori = servo(2000, 8000, 0.1, 0)
-	servo_vert = servo(2000, 8000, 0.1, 1)
+	servo_vert = servo(2000, 8000, 0.1, 0)
+	servo_hori = servo(2000, 8000, 0.1, 1)
 	servo_pre  = servo(2000, 8000, 0.1, 2)
 
 	GPIO.setmode(GPIO.BCM)
@@ -43,7 +43,7 @@ def main():
 		print("Connecte au client")
 		GPIO.output(18,GPIO.LOW)
 		GPIO.output(20,GPIO.LOW)
-		loop(encode_param, s, client, ser, servo_hori, servo_vert)
+		loop(encode_param, s, client, ser, servo_hori, servo_vert, servo_pre)
 		client.close()
 		#s.close()
 		time.sleep(2)
@@ -53,7 +53,9 @@ def main():
 	#main()
 
 def loop(encode_param, s, client, ser, servo_hori, servo_vert, servo_pre):
+	image_counter = 0
 	while True:
+		ser.flushInput()
 		coor = client.recv(255)
 		if coor == 'sendPosition':
 			position = client.recv(255)
@@ -67,13 +69,23 @@ def loop(encode_param, s, client, ser, servo_hori, servo_vert, servo_pre):
 			print("Pin est egale a 1")
 			data2 = "ok"
 			client.sendall(data2.encode('utf-8'))
-        	elif coor == 'getImage':
-                	GPIO.output(18,GPIO.HIGH)
+		elif coor == 'getImage':
+			cam = cv2.VideoCapture(0)
+            #GPIO.output(18,GPIO.HIGH)
 			#ret, frame = cam.read()
-			frame = cv2.imread('cam.jpg')
+			ret_val, frame = cam.read()
+			time.sleep(3)
+			#frame = cv2.imread('cam.jpg')
 			frame = cv2.resize(frame, (320, 180))
-			_, buffer = cv2.imencode('.jpg', frame)
-			encoded = base64.b64encode(buffer)
+			encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+			result, buffer = cv2.imencode('.jpg', frame, encode_param)
+			data = pickle.dumps(buffer,0)
+			size = len(data)
+
+			print("{}: {}".format(image_counter, size))
+			client.sendall(struct.pack(">L", size) + data)
+			image_counter += 1
+			#encoded = base64.b64encode(buffer)
 			#result, frame = cv2.imencode('.jpg', frame, encode_param)
                 	#data = pickle.dumps(frame)
 			time.sleep(1)
@@ -81,11 +93,13 @@ def loop(encode_param, s, client, ser, servo_hori, servo_vert, servo_pre):
                 	#print("{}: {}".format(size, size))
                 	#client.sendall(struct.pack(">L", size) + data)
                 	#client.sendall(encoded.encode('utf-8'))
-			msg = encoded
-			data = struct.pack('>I', len(msg)) + msg
-			client.sendall(data)
+			# msg = encoded
+			# data = struct.pack('>I', len(msg)) + msg
+			# client.sendall(data)
+			frame = ""
+			cam.release()
 			print("Send fonctionne")
-			GPIO.output(18,GPIO.LOW)
+			#GPIO.output(18,GPIO.LOW)
 	
 		elif coor == 'deconnect':
 			print("deconnection")
